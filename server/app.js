@@ -10,7 +10,10 @@ const paymentRoutes = require("./routes/payments");
 
 const app = express();
 
-app.use(cors({ origin: (process.env.CLIENT_ORIGIN || "*").split(",") }));
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "*")
+  .split(",")
+  .map((s) => s.trim());
+app.use(cors({ origin: allowedOrigins.includes("*") ? true : allowedOrigins }));
 app.use(express.json());
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
