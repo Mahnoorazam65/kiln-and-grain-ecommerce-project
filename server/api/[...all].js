@@ -2,6 +2,9 @@ const app = require("../app");
 const connectDB = require("../config/db");
 
 module.exports = async (req, res) => {
+  if (req.method === "OPTIONS") {
+    return app(req, res);
+  }
   try {
     await connectDB();
   } catch (err) {
