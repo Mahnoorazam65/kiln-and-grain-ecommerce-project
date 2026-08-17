@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const connectDB = require("./config/db");
 
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
@@ -16,6 +17,16 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || "*")
 app.use(cors({ origin: allowedOrigins.includes("*") ? true : allowedOrigins }));
 app.use(express.json());
 
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("MongoDB connection failed:", err.message);
+    res.status(500).json({ error: "Database connection failed." });
+  }
+});
+
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 app.use("/api/auth", authRoutes);
@@ -28,5 +39,19 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: "Something went wrong on the server." });
 });
+
+if (require.main === module) {
+  const PORT = process.env.PORT || 4000;
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () =>
+        console.log(`Kiln & Grain API listening on port ${PORT}`),
+      );
+    })
+    .catch((err) => {
+      console.error("MongoDB connection failed:", err.message);
+      process.exit(1);
+    });
+}
 
 module.exports = app;
